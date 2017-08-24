@@ -81,7 +81,7 @@ def walkTurnAround():
 
   #Avanza 30 cm al frente
   sleep(0.5)
-  X = 0.35 # 50 cm al frente
+  X = 0.45 # 50 cm al frente
   Y = 0
   Theta = 0
   motionProxy.moveTo(X, Y, Theta, [ ["MaxStepX", 0.04],["MaxStepFrequency", 0.85] ]) # default of 0.02
