@@ -50,41 +50,15 @@ def walkTurnAround():
 
   #####################
   ## get robot position before move
-  ##################### Avanza derecho
+  #####################
   initRobotPosition = m.Pose2D(motionProxy.getRobotPosition(False))
-  X = 1.0 # 100 cm al frente
+  X = 1.7 # 50 cm al frente
   Y = 0
   Theta = 0
-  motionProxy.moveTo(X, Y, Theta, [ ["MaxStepX", 0.04],["MaxStepFrequency", 0.7] ]) # default of 0.02
-  sleep(1)
+  # motionProxy.post.moveTo(X, Y, Theta)
 
-  #Gira
-  X = 0 
-  Y = 0
-  Theta = (math.pi/2)-0.4
-  motionProxy.moveTo(X, Y, Theta,  [ ["MaxStepX", 0.04],["MaxStepFrequency", 0.7] ]) 
-
-  #Avanza derecho
-  sleep(1)
-  X = 0.6 
-  Y = 0
-  Theta = 0
-  motionProxy.moveTo(X, Y, Theta, [ ["MaxStepX", 0.04],["MaxStepFrequency", 0.7] ]) # default of 0.02
-
-  sleep(1)
-
-  #Gira
-  X = 0 
-  Y = 0
-  Theta = -(math.pi)/2
-  motionProxy.moveTo(X, Y, Theta,  [ ["MaxStepX", 0.04],["MaxStepFrequency", 0.7] ]) 
-
-  #Avanza 30 cm al frente
-  sleep(0.5)
-  X = 0.45 # 50 cm al frente
-  Y = 0
-  Theta = 0
-  motionProxy.moveTo(X, Y, Theta, [ ["MaxStepX", 0.04],["MaxStepFrequency", 0.7] ]) # default of 0.02
+  #### test luis
+  motionProxy.moveTo(X, Y, Theta, [ ["MaxStepX", 0.06],["MaxStepFrequency", 1.0] ]) # default of 0.02
 
   ####
   sleep(1)
@@ -107,7 +81,7 @@ def walkTurnAround():
   postureProxy.goToPosture("StandInit", 0.5)
 
   # Go to rest position
-  motionProxy.rest()
+  #motionProxy.rest()
 
 # Walk ----------------------------
 
@@ -211,7 +185,3 @@ if __name__ == '__main__':
                         help='Robot port number')
     args = parser.parse_args()
     main(args.ip, args.port)
-
-
-if len(li) == 0:
-    print('the list is empty')
