@@ -1,0 +1,32 @@
+pseudocódigo
+
+Aplicar los 3 filtros de colores
+	detectaColorObjeto
+		Blanco
+		Rojo
+		Café
+
+if detectaRojo
+	SelectNaoMark=64
+	ColorDetected: rojo //esto se pone dentro de los filtros
+
+if detectaBlanco
+	SelectNaoMark= 80
+	ColorDetected: blanco
+
+if detectaCafe
+	SelectNaoMark= 108
+	ColorDetected: cafe
+
+--> cada NaoMark es una dirección
+	
+detectNaoMark()
+	
+	if NaoMarkDetected == SelectNaoMark  //64
+		moveRed()
+
+	if NaoMarkDetected == SelectNaoMark  //80
+		moveWhite()
+
+	if NaoMarkDetected == SelectNaoMark  //108
+		moveBrown()

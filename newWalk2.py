@@ -1,10 +1,3 @@
-# -*- encoding: UTF-8 -*-
-"""
-# API: doc.aldebaran.com/2-1/naoqi/sensors 
-The routine starts with the MiddleTactilTouched and after the routine
-has finished the RearTactilTouched exit the program. 
-"""
-
 import sys
 from time import sleep
 import numpy as np
@@ -15,6 +8,7 @@ from naoqi import ALBroker
 from naoqi import ALModule
 import math
 import almath as m # python's wrapping of almath
+from math import exp,pow,fabs,cos,sin,sqrt
 import argparse
 import time
 
@@ -22,114 +16,100 @@ import time
 ReactToTouch = None
 memory = None
 flag = False
+naoMarkRed= 64
+naoMarkWhite= 80
+naoMarkBrown= 108
+
 initialSentence = """ 
     Vamos
 """
 
-# Walk ----------------------------
 
-def walkTurnAround():
+####--------------------- Global variables, all proxies and Nao resources
+class globalVariables(myBroker):
+    tempMem = ALProxy('ALMemory')
+    
+    #position = [X,Y,ABSTHETA,RELTHETA]
+    X = 0
+    Y = 1
+    ABSTHETA = 2
+    RELTHETA = 3
+    V = 4
 
-  motionProxy  = ALProxy('ALMotion')
-  postureProxy = ALProxy('ALRobotPosture')
-# Wake up robot
-  motionProxy.wakeUp()
-
-  # Send robot to Stand Init
-  postureProxy.goToPosture("StandInit", 0.5)
-
-  #####################
-  ## Enable arms control by move algorithm
-  #####################
-  motionProxy.setMoveArmsEnabled(True, True)
-  
-  #####################
-  ## FOOT CONTACT PROTECTION
-  #####################
-  motionProxy.setMotionConfig([["ENABLE_FOOT_CONTACT_PROTECTION", True]])
-
-  #####################
-  ## get robot position before move
-  ##################### Avanza derecho
-  initRobotPosition = m.Pose2D(motionProxy.getRobotPosition(False))
-  X = 1.0 # 100 cm al frente
-  Y = 0
-  Theta = 0
-  motionProxy.moveTo(X, Y, Theta, [ ["MaxStepX", 0.06],["MaxStepFrequency", 0.5] ]) # default of 0.02
-  sleep(0.5)
-
-  #Gira
-  X = 0 
-  Y = 0
-  Theta = (math.pi/2)-0.4
-  motionProxy.moveTo(X, Y, Theta,  [ ["MaxStepX", 0.04],["MaxStepFrequency", 0.5] ]) 
-
-  #Avanza derecho
-  sleep(0.5)
-  X = 0.6 
-  Y = 0
-  Theta = 0
-  motionProxy.moveTo(X, Y, Theta, [ ["MaxStepX", 0.06],["MaxStepFrequency", 0.5] ]) # default of 0.02
-
-  sleep(1)
-
-  #Gira
-  X = 0 
-  Y = 0
-  Theta = -(math.pi)/2
-  motionProxy.moveTo(X, Y, Theta,  [ ["MaxStepX", 0.04],["MaxStepFrequency", 0.5] ]) 
-
-  #Avanza 30 cm al frente
-  sleep(0.5)
-  X = 0.5 # 50 cm al frente
-  Y = 0
-  Theta = 0
-  motionProxy.moveTo(X, Y, Theta, [ ["MaxStepX", 0.06],["MaxStepFrequency", 0.5] ]) # default of 0.02
-
-  ####
-  sleep(1)
-  # wait is useful because with post moveTo is not blocking function
-  motionProxy.waitUntilMoveIsFinished()
-
-  #####################
-  ## get robot position after move
-  #####################
-  endRobotPosition = m.Pose2D(motionProxy.getRobotPosition(False))
-
-  #####################
-  # compute and print the robot motion
-  #####################
-  robotMove = m.pose2DInverse(initRobotPosition)*endRobotPosition
-  # return an angle between ]-PI, PI]
-  robotMove.theta = m.modulo2PI(robotMove.theta)
-  print "Robot Move:", robotMove
-
-  postureProxy.goToPosture("StandInit", 0.5)
-
-  # Go to rest position
-  motionProxy.rest()
-
-# Walk ----------------------------
+    #Paths
+    LSONAR = "Device/SubDeviceList/US/Left/Sensor/Value"
+    RSONAR = "Device/SubDeviceList/US/Right/Sensor/Value"
+    ANGLEZ = "Device/SubDeviceList/InertialSensor/AngleZ/Sensor/Value" 
 
 
+####---------------------
+
+
+
+#-------------------------------------------------------------------------------------------------------------#
+#                                           main()                                                            #
+#-------------------------------------------------------------------------------------------------------------
 def mainRoutine():
+
     # Greetings
     tts = ALProxy('ALTextToSpeech')
     # si jala pero debemos checar en un ambiente mas real al del concurso como
     # se va a comportar el reconocimiento
+    
     # ---------- Speech Recognition ----------------- #
     asr = ALProxy('ALSpeechRecognition')
-    tempMem = ALProxy('ALMemory')
+    
     asr.setLanguage('Spanish')
     tts.say(initialSentence)
-    vocabulary = ['si', 'no', 'porfavor']
-    # wait for answer
-    #------Walking ------------#
-    
-    walkTurnAround()
-    sleep(2)
-  
-    print"Termina"
+
+    # Init proxies.    
+    gVars = globalVariables()
+    #gVars.posture.goToPosture("StandInit",0.5) 
+    motionProxy  = ALProxy('ALMotion')
+    postureProxy = ALProxy('ALRobotPosture')
+    # Wake up robot
+    motionProxy.wakeUp()
+    cont =0 
+    initialAngle= gVars.tempMem.getData(gVars.ANGLEZ) #initialAngle
+    #gVars.motion.moveTo(0.5, 0, 0 )
+
+    while (True):
+        
+        actRelTheta = gVars.tempMem.getData(gVars.ANGLEZ)
+        
+        print" actual valor theta"
+        print actRelTheta
+
+        sleep(1)
+        #gVars.motion.moveTo(0.5, 0, 0 )
+
+        
+'''
+        #check if wall
+        gVars.sonar.subscribe("UltraSonicSensors")
+        
+        promLSonar=0
+        promDSonar=0
+
+        acumLSonar=0
+        acumRSonar=0
+
+        for n in range(1,10):
+            lsonar = gVars.memory.getData(gVars.LSONAR)
+        
+            acumLSonar= lsonar + acumLSonar
+        
+        promLSonar= acumLSonar/10
+
+        print "SONARS: ", promLSonar
+'''
+        
+
+#-------------------------------------------------------------------------------------------------------------#
+#                                                 -                                                           #
+#-------------------------------------------------------------------------------------------------------------#
+
+
 # ---------- ------------------ ----------------- #
 
 class ReactToTouch(ALModule):
@@ -212,6 +192,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
     main(args.ip, args.port)
 
-
-if len(li) == 0:
-    print('the list is empty')
+    # 

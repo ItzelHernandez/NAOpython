@@ -1,9 +1,3 @@
-# -*- encoding: UTF-8 -*-
-"""
-# API: doc.aldebaran.com/2-1/naoqi/sensors 
-The routine starts with the MiddleTactilTouched and after the routine
-has finished the RearTactilTouched exit the program. 
-"""
 
 import sys
 from time import sleep
@@ -13,105 +7,74 @@ import cv2
 from naoqi import ALProxy
 from naoqi import ALBroker
 from naoqi import ALModule
-import math
-import almath as m # python's wrapping of almath
 import argparse
+
+import motion
 import time
+import almath
+import math
+from math import exp,pow,fabs,cos,sin,sqrt
+
+nao_ip="0.0.0.0"
 
 # Global variable to store the ReactToTouch module instance
+####--------------------- Global variables, all proxies and Nao resources
+class globalVariables:
+
+    def __init__(self, robotIP):
+        self.IP = robotIP
+        print(self.IP)
+        PORT = 9559
+        try:
+            self.motion = ALProxy("ALMotion", self.IP, PORT)
+        except Exception, e:
+            print "Could not create proxy to ALMotion"
+            print "Error was: ", e
+
+        try:
+            self.posture = ALProxy("ALRobotPosture", self.IP, PORT)
+        except Exception, e:
+            print "Could not create proxy to ALRobotPosture"
+            print "Error was: ", e
+       
+        try:
+            self.memory = ALProxy("ALMemory", self.IP, PORT)
+        except Exception,e:
+            print "Could not create proxy to ALRobotPosture"
+            print "Error was: ", e
+
+        try:
+            self.sonar = ALProxy("ALSonar", self.IP, PORT)
+        except Exception, e:
+            print "Could not create proxy to ALSonar"
+            print "Error was: ", e
+
+
+    #position = [X,Y,ABSTHETA,RELTHETA]
+    X = 0
+    Y = 1
+    ABSTHETA = 2
+    RELTHETA = 3
+    V = 4
+
+    #Paths
+    LSONAR = "Device/SubDeviceList/US/Left/Sensor/Value"
+    RSONAR = "Device/SubDeviceList/US/Right/Sensor/Value"
+    ANGLEZ = "Device/SubDeviceList/InertialSensor/AngleZ/Sensor/Value" 
+
+####---------------------
+
 ReactToTouch = None
 memory = None
 flag = False
 initialSentence = """ 
-    Vamos
+    Hola! 
 """
 
-# Walk ----------------------------
 
-def walkTurnAround():
-
-  motionProxy  = ALProxy('ALMotion')
-  postureProxy = ALProxy('ALRobotPosture')
-# Wake up robot
-  motionProxy.wakeUp()
-
-  # Send robot to Stand Init
-  postureProxy.goToPosture("StandInit", 0.5)
-
-  #####################
-  ## Enable arms control by move algorithm
-  #####################
-  motionProxy.setMoveArmsEnabled(True, True)
-  
-  #####################
-  ## FOOT CONTACT PROTECTION
-  #####################
-  motionProxy.setMotionConfig([["ENABLE_FOOT_CONTACT_PROTECTION", True]])
-
-  #####################
-  ## get robot position before move
-  ##################### Avanza derecho
-  initRobotPosition = m.Pose2D(motionProxy.getRobotPosition(False))
-  X = 1.0 # 100 cm al frente
-  Y = 0
-  Theta = 0
-  motionProxy.moveTo(X, Y, Theta, [ ["MaxStepX", 0.06],["MaxStepFrequency", 0.5] ]) # default of 0.02
-  sleep(0.5)
-
-  #Gira
-  X = 0 
-  Y = 0
-  Theta = (math.pi/2)-0.4
-  motionProxy.moveTo(X, Y, Theta,  [ ["MaxStepX", 0.04],["MaxStepFrequency", 0.5] ]) 
-
-  #Avanza derecho
-  sleep(0.5)
-  X = 0.6 
-  Y = 0
-  Theta = 0
-  motionProxy.moveTo(X, Y, Theta, [ ["MaxStepX", 0.06],["MaxStepFrequency", 0.5] ]) # default of 0.02
-
-  sleep(1)
-
-  #Gira
-  X = 0 
-  Y = 0
-  Theta = -(math.pi)/2
-  motionProxy.moveTo(X, Y, Theta,  [ ["MaxStepX", 0.04],["MaxStepFrequency", 0.5] ]) 
-
-  #Avanza 30 cm al frente
-  sleep(0.5)
-  X = 0.5 # 50 cm al frente
-  Y = 0
-  Theta = 0
-  motionProxy.moveTo(X, Y, Theta, [ ["MaxStepX", 0.06],["MaxStepFrequency", 0.5] ]) # default of 0.02
-
-  ####
-  sleep(1)
-  # wait is useful because with post moveTo is not blocking function
-  motionProxy.waitUntilMoveIsFinished()
-
-  #####################
-  ## get robot position after move
-  #####################
-  endRobotPosition = m.Pose2D(motionProxy.getRobotPosition(False))
-
-  #####################
-  # compute and print the robot motion
-  #####################
-  robotMove = m.pose2DInverse(initRobotPosition)*endRobotPosition
-  # return an angle between ]-PI, PI]
-  robotMove.theta = m.modulo2PI(robotMove.theta)
-  print "Robot Move:", robotMove
-
-  postureProxy.goToPosture("StandInit", 0.5)
-
-  # Go to rest position
-  motionProxy.rest()
-
-# Walk ----------------------------
-
-
+####---------------------####
+#       MAIN ROUTINE  #
+####---------------------####
 def mainRoutine():
     # Greetings
     tts = ALProxy('ALTextToSpeech')
@@ -123,14 +86,44 @@ def mainRoutine():
     asr.setLanguage('Spanish')
     tts.say(initialSentence)
     vocabulary = ['si', 'no', 'porfavor']
-    # wait for answer
-    #------Walking ------------#
     
-    walkTurnAround()
-    sleep(2)
-  
-    print"Termina"
-# ---------- ------------------ ----------------- #
+    
+    gVars = globalVariables(nao_ip)
+    gVars.posture.goToPosture("StandInit",0.5) 
+
+    cont =0 
+    initialAngle= gVars.memory.getData(gVars.ANGLEZ) #initialAngle
+    
+
+    #esto sirve para checar la posic del robot
+
+    gVars.motion.moveTo(0, 0, (math.pi/6) )
+    
+    gVars.motion.moveTo(0, 0, -(math.pi/6) )
+    
+    gVars.motion.moveTo(0, 0, -(math.pi/6) )
+    
+
+    while (True):
+        
+        actRelTheta = gVars.memory.getData(gVars.ANGLEZ)
+        
+        print" actual valor theta"
+        print actRelTheta
+
+        print" initial "
+        print initialAngle
+
+        sleep(1)
+
+
+    print ("fin")
+
+####---------------------####
+#       END MAIN ROUTINE  #
+####---------------------####
+
+
 
 class ReactToTouch(ALModule):
     """ A simple module able to react
@@ -178,6 +171,9 @@ def main(ip, port):
     # We need this broker to be able to construct
     # NAOqi modules and subscribe to other modules
     # The broker must stay alive until the program exists
+
+    #nao_ip= ip
+
     myBroker = ALBroker('myBroker',
        '0.0.0.0',   # listen to anyone
        0,           # find a free port and use it
@@ -210,8 +206,8 @@ if __name__ == '__main__':
     parser.add_argument('--port', type=int, default=9559,
                         help='Robot port number')
     args = parser.parse_args()
+
+    global nao_ip
+    nao_ip= args.ip
+
     main(args.ip, args.port)
-
-
-if len(li) == 0:
-    print('the list is empty')

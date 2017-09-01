@@ -55,36 +55,36 @@ def walkTurnAround():
   X = 1.0 # 100 cm al frente
   Y = 0
   Theta = 0
-  motionProxy.moveTo(X, Y, Theta, [ ["MaxStepX", 0.04],["MaxStepFrequency", 0.7] ]) # default of 0.02
-  sleep(1)
+  motionProxy.moveTo(X, Y, Theta, [ ["MaxStepX", 0.06],["MaxStepFrequency", 0.5] ]) # default of 0.02
+  sleep(0.5)
 
-  #Gira izq
+  #Gira
   X = 0 
   Y = 0
   Theta = -(math.pi/2)-0.4
-  motionProxy.moveTo(X, Y, Theta,  [ ["MaxStepX", 0.04],["MaxStepFrequency", 0.7] ]) 
+  motionProxy.moveTo(X, Y, Theta,  [ ["MaxStepX", 0.04],["MaxStepFrequency", 0.5] ]) 
 
   #Avanza derecho
-  sleep(1)
+  sleep(0.5)
   X = 0.6 
   Y = 0
   Theta = 0
-  motionProxy.moveTo(X, Y, Theta, [ ["MaxStepX", 0.04],["MaxStepFrequency", 0.7] ]) # default of 0.02
+  motionProxy.moveTo(X, Y, Theta, [ ["MaxStepX", 0.06],["MaxStepFrequency", 0.5] ]) # default of 0.02
 
   sleep(1)
 
-  #Gira derecha
+  #Gira
   X = 0 
   Y = 0
   Theta = (math.pi)/2
-  motionProxy.moveTo(X, Y, Theta,  [ ["MaxStepX", 0.04],["MaxStepFrequency", 0.7] ]) 
+  motionProxy.moveTo(X, Y, Theta,  [ ["MaxStepX", 0.04],["MaxStepFrequency", 0.5] ]) 
 
   #Avanza 30 cm al frente
   sleep(0.5)
-  X = 0.45 # 50 cm al frente
+  X = 0.5 # 50 cm al frente
   Y = 0
   Theta = 0
-  motionProxy.moveTo(X, Y, Theta, [ ["MaxStepX", 0.04],["MaxStepFrequency", 0.7] ]) # default of 0.02
+  motionProxy.moveTo(X, Y, Theta, [ ["MaxStepX", 0.06],["MaxStepFrequency", 0.5] ]) # default of 0.02
 
   ####
   sleep(1)

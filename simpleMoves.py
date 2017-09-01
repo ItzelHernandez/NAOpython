@@ -25,11 +25,10 @@ flag = False
 initialSentence = """ 
     Vamos
 """
-
+naoMarkDetected= 0
 # Walk ----------------------------
 
 def walkTurnAround():
-
   motionProxy  = ALProxy('ALMotion')
   postureProxy = ALProxy('ALRobotPosture')
 # Wake up robot
@@ -50,44 +49,45 @@ def walkTurnAround():
 
   #####################
   ## get robot position before move
-  ##################### Avanza derecho
-  initRobotPosition = m.Pose2D(motionProxy.getRobotPosition(False))
-  X = 1.0 # 100 cm al frente
-  Y = 0
+  ##################### Avanza diagonal, primera validacion
+  initRobotPosition = m.Pose2D(motionProxy.getRobotPosition(False)) 
+
+  X = 0.70 # 100 cm al frente
+  Y = 0.0
   Theta = 0
-  motionProxy.moveTo(X, Y, Theta, [ ["MaxStepX", 0.06],["MaxStepFrequency", 0.5] ]) # default of 0.02
+  Frequency=1
+  motionProxy.moveTo(X, Y, Theta, Frequency) # default of 0.02
   sleep(0.5)
 
-  #Gira
   X = 0 
-  Y = 0
-  Theta = (math.pi/2)-0.4
-  motionProxy.moveTo(X, Y, Theta,  [ ["MaxStepX", 0.04],["MaxStepFrequency", 0.5] ]) 
-
-  #Avanza derecho
-  sleep(0.5)
-  X = 0.6 
-  Y = 0
+  Y = 0.5 # 50 cm a un lado para buscar la roja
   Theta = 0
-  motionProxy.moveTo(X, Y, Theta, [ ["MaxStepX", 0.06],["MaxStepFrequency", 0.5] ]) # default of 0.02
+  Frequency=1
+  motionProxy.moveTo(X, Y, Theta, Frequency) # default of 0.02
+  sleep(0.5)
 
-  sleep(1)
-
-  #Gira
+  #Gira izq
   X = 0 
   Y = 0
   Theta = -(math.pi)/2
-  motionProxy.moveTo(X, Y, Theta,  [ ["MaxStepX", 0.04],["MaxStepFrequency", 0.5] ]) 
-
-  #Avanza 30 cm al frente
+  Frequency=1
+  motionProxy.moveTo(X, Y, Theta, Frequency)
   sleep(0.5)
-  X = 0.5 # 50 cm al frente
-  Y = 0
-  Theta = 0
-  motionProxy.moveTo(X, Y, Theta, [ ["MaxStepX", 0.06],["MaxStepFrequency", 0.5] ]) # default of 0.02
 
-  ####
-  sleep(1)
+  X = 1.05 # 105 cm al frente
+  Y = 0.0
+  Theta = 0
+  Frequency=1
+  motionProxy.moveTo(X, Y, Theta, Frequency)
+  sleep(0.5)
+
+  #Gira derecha
+  X = 0 
+  Y = 0
+  Theta = (math.pi)/2
+  Frequency=1
+  motionProxy.moveTo(X, Y, Theta, Frequency) 
+
   # wait is useful because with post moveTo is not blocking function
   motionProxy.waitUntilMoveIsFinished()
 
@@ -211,7 +211,3 @@ if __name__ == '__main__':
                         help='Robot port number')
     args = parser.parse_args()
     main(args.ip, args.port)
-
-
-if len(li) == 0:
-    print('the list is empty')

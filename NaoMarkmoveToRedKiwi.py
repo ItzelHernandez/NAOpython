@@ -22,54 +22,119 @@ import time
 ReactToTouch = None
 memory = None
 flag = False
+naoMarkDetected= 80
+
 initialSentence = """ 
     Vamos
 """
 
+# NaoMark detection ----------------------------
+def detectNaoMark():
+
+  global naoMarkDetected
+  print "Nao Mark detected:"
+  print naoMarkDetected
+
+  try:
+    landMarkProxy = ALProxy("ALLandMarkDetection")
+  except Exception, e:
+    print "Error when creating landmark detection proxy:"
+    print str(e)
+    exit(1)
+
+  period = 500
+  landMarkProxy.subscribe("Test_LandMark", period, 0.0 )
+
+  memValue = "LandmarkDetected"
+
+  # Create a proxy to ALMemory
+  try:
+    memoryProxy = ALProxy("ALMemory")
+  except Exception, e:
+    print "Error when creating memory proxy:"
+    print str(e)
+    exit(1)
+
+  # A simple loop that reads the memValue and checks whether landmarks are detected.
+  for i in range(0, 20):
+    time.sleep(0.5)
+    val = memoryProxy.getData(memValue)
+
+    # Check whether we got a valid output.
+    if(val and isinstance(val, list) and len(val) >= 2):
+      timeStamp = val[0]
+      markInfoArray = val[1]
+
+      try:
+        # Browse the markInfoArray to get info on each detected mark.
+        for markInfo in markInfoArray:
+
+          # First Field = Shape info.
+          markShapeInfo = markInfo[0]
+
+          # Second Field = Extra info (ie, mark ID).
+          markExtraInfo = markInfo[1]
+          #print "mark  ID: %d" % (markExtraInfo[0])
+          print "markInfo"
+          print markExtraInfo[0]
+
+
+          if markExtraInfo[0] == naoMarkDetected : #naoMark 64
+            print "es metal"
+            walkToRed()
+
+          if markExtraInfo[0] == naoMarkDetected: #naoMark 80
+            print "es plastico"
+            walkToWhite()
+
+          if markExtraInfo[0] == naoMarkDetected: #naoMark 108
+            print "es carton"
+            walkToBrown()
+
+      except Exception, e:
+        print "Error msg %s" % (str(e))
+    else:
+        print "No landmark detected"
+
+  landMarkProxy.unsubscribe("Test_LandMark")
+
+# NaoMark detection ----------------------------
+
+
+
 # Walk ----------------------------
 
-def walkTurnAround():
+def walkToRed():
 
   motionProxy  = ALProxy('ALMotion')
   postureProxy = ALProxy('ALRobotPosture')
 # Wake up robot
   motionProxy.wakeUp()
 
-  # Send robot to Stand Init
   postureProxy.goToPosture("StandInit", 0.5)
-
-  #####################
-  ## Enable arms control by move algorithm
-  #####################
   motionProxy.setMoveArmsEnabled(True, True)
-  
-  #####################
-  ## FOOT CONTACT PROTECTION
-  #####################
+
   motionProxy.setMotionConfig([["ENABLE_FOOT_CONTACT_PROTECTION", True]])
 
-  #####################
-  ## get robot position before move
-  ##################### Avanza derecho
   initRobotPosition = m.Pose2D(motionProxy.getRobotPosition(False))
   X = 1.0 # 100 cm al frente
   Y = 0
   Theta = 0
-  motionProxy.moveTo(X, Y, Theta, [ ["MaxStepX", 0.06],["MaxStepFrequency", 0.5] ]) # default of 0.02
+  motionProxy.moveTo(X, Y, Theta, [ ["MaxStepX", 0.045],["MaxStepFrequency", 0.2] ]) # default of 0.02
   sleep(0.5)
 
   #Gira
   X = 0 
   Y = 0
   Theta = (math.pi/2)-0.4
-  motionProxy.moveTo(X, Y, Theta,  [ ["MaxStepX", 0.04],["MaxStepFrequency", 0.5] ]) 
+  motionProxy.moveTo(X, Y, Theta,  [ ["MaxStepX", 0.045],["MaxStepFrequency", 0.2] ]) 
 
   #Avanza derecho
   sleep(0.5)
   X = 0.6 
   Y = 0
   Theta = 0
-  motionProxy.moveTo(X, Y, Theta, [ ["MaxStepX", 0.06],["MaxStepFrequency", 0.5] ]) # default of 0.02
+  motionProxy.moveTo(X, Y, Theta, [ ["MaxStepX", 0.045],["MaxStepFrequency", 0.2] ]) # default of 0.02
 
   sleep(1)
 
@@ -77,31 +142,25 @@ def walkTurnAround():
   X = 0 
   Y = 0
   Theta = -(math.pi)/2
-  motionProxy.moveTo(X, Y, Theta,  [ ["MaxStepX", 0.04],["MaxStepFrequency", 0.5] ]) 
+  motionProxy.moveTo(X, Y, Theta,  [ ["MaxStepX", 0.045],["MaxStepFrequency", 0.2] ]) 
 
   #Avanza 30 cm al frente
   sleep(0.5)
   X = 0.5 # 50 cm al frente
   Y = 0
   Theta = 0
-  motionProxy.moveTo(X, Y, Theta, [ ["MaxStepX", 0.06],["MaxStepFrequency", 0.5] ]) # default of 0.02
+  motionProxy.moveTo(X, Y, Theta, [ ["MaxStepX", 0.045],["MaxStepFrequency", 0.2] ]) # default of 0.02
 
   ####
   sleep(1)
   # wait is useful because with post moveTo is not blocking function
   motionProxy.waitUntilMoveIsFinished()
 
-  #####################
-  ## get robot position after move
-  #####################
   endRobotPosition = m.Pose2D(motionProxy.getRobotPosition(False))
-
-  #####################
-  # compute and print the robot motion
-  #####################
   robotMove = m.pose2DInverse(initRobotPosition)*endRobotPosition
-  # return an angle between ]-PI, PI]
+
   robotMove.theta = m.modulo2PI(robotMove.theta)
+ 
   print "Robot Move:", robotMove
 
   postureProxy.goToPosture("StandInit", 0.5)
@@ -124,9 +183,18 @@ def mainRoutine():
     tts.say(initialSentence)
     vocabulary = ['si', 'no', 'porfavor']
     # wait for answer
+   
     #------Walking ------------#
+    # valida NaoMark before walk
     
-    walkTurnAround()
+    #detectColor()
+
+    global naoMarkDetected
+    naoMarkDetected= 64
+
+
+    detectNaoMark()
+
     sleep(2)
   
     print"Termina"
@@ -140,9 +208,6 @@ class ReactToTouch(ALModule):
         ALModule.__init__(self, name)
         # No need for IP and port here because
         # we have our Python broker connected to NAOqi broker
-
-        # Create a proxy to ALTextToSpeech for later use
-        # self.tts = ALProxy("ALTextToSpeech")
 
         # Subscribe to TouchChanged event:
         global memory

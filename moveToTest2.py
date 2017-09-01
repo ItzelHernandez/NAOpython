@@ -50,41 +50,21 @@ def walkTurnAround():
 
   #####################
   ## get robot position before move
-  ##################### Avanza derecho
+  #####################
   initRobotPosition = m.Pose2D(motionProxy.getRobotPosition(False))
-  X = 1.0 # 100 cm al frente
+  X = 1.0 # 50 cm al frente
   Y = 0
   Theta = 0
-  motionProxy.moveTo(X, Y, Theta, [ ["MaxStepX", 0.06],["MaxStepFrequency", 0.5] ]) # default of 0.02
-  sleep(0.5)
+  # motionProxy.post.moveTo(X, Y, Theta)
 
-  #Gira
-  X = 0 
-  Y = 0
-  Theta = (math.pi/2)-0.4
-  motionProxy.moveTo(X, Y, Theta,  [ ["MaxStepX", 0.04],["MaxStepFrequency", 0.5] ]) 
-
-  #Avanza derecho
-  sleep(0.5)
-  X = 0.6 
-  Y = 0
-  Theta = 0
-  motionProxy.moveTo(X, Y, Theta, [ ["MaxStepX", 0.06],["MaxStepFrequency", 0.5] ]) # default of 0.02
-
-  sleep(1)
-
-  #Gira
-  X = 0 
-  Y = 0
-  Theta = -(math.pi)/2
-  motionProxy.moveTo(X, Y, Theta,  [ ["MaxStepX", 0.04],["MaxStepFrequency", 0.5] ]) 
-
-  #Avanza 30 cm al frente
-  sleep(0.5)
-  X = 0.5 # 50 cm al frente
-  Y = 0
-  Theta = 0
-  motionProxy.moveTo(X, Y, Theta, [ ["MaxStepX", 0.06],["MaxStepFrequency", 0.5] ]) # default of 0.02
+  #### test luis
+  motionProxy.moveTo(X, Y, Theta, 
+    [ ["MaxStepX", 0.04],         # step of 2 cm in front
+      ["MaxStepY", 0],         # default value
+      ["MaxStepTheta", 0],      # default value
+      ["MaxStepFrequency", 1.0],  # low frequency
+      ["StepHeight", 0.01],       # step height of 1 cm
+     ])         # torso bend 0.1 rad in front
 
   ####
   sleep(1)
@@ -107,7 +87,7 @@ def walkTurnAround():
   postureProxy.goToPosture("StandInit", 0.5)
 
   # Go to rest position
-  motionProxy.rest()
+  #motionProxy.rest()
 
 # Walk ----------------------------
 
@@ -211,7 +191,3 @@ if __name__ == '__main__':
                         help='Robot port number')
     args = parser.parse_args()
     main(args.ip, args.port)
-
-
-if len(li) == 0:
-    print('the list is empty')

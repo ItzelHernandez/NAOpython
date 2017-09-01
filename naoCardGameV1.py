@@ -13,103 +13,65 @@ import cv2
 from naoqi import ALProxy
 from naoqi import ALBroker
 from naoqi import ALModule
-import math
-import almath as m # python's wrapping of almath
 import argparse
-import time
 
 # Global variable to store the ReactToTouch module instance
 ReactToTouch = None
 memory = None
 flag = False
 initialSentence = """ 
-    Vamos
+    Hola! Me llamo NAO y vamos a jugar algo nuevo! Estan listos?
 """
 
-# Walk ----------------------------
+# Vision --------------------------
+redColor=False
+brownColor= False
+lenContRed=0
+lenContBrown=0
+lenContWhite=0
 
-def walkTurnAround():
+def contoursFilter():
 
-  motionProxy  = ALProxy('ALMotion')
-  postureProxy = ALProxy('ALRobotPosture')
-# Wake up robot
-  motionProxy.wakeUp()
+  ##-----Read Mask--------------------##
+  img = cv2.imread('dilation3.png',0)
+  ##-----Threshold Filter-------------##
+  ret,thresh = cv2.threshold(img,127,255,0)
+  ##-----Find contours-------------##
+  im,contours,hierarchy = cv2.findContours(thresh, 1, 2)
 
-  # Send robot to Stand Init
-  postureProxy.goToPosture("StandInit", 0.5)
+  return contours
 
-  #####################
-  ## Enable arms control by move algorithm
-  #####################
-  motionProxy.setMoveArmsEnabled(True, True)
-  
-  #####################
-  ## FOOT CONTACT PROTECTION
-  #####################
-  motionProxy.setMotionConfig([["ENABLE_FOOT_CONTACT_PROTECTION", True]])
+def redFilter(hsv):
+    lower_range = np.array([0, 50, 50], dtype=np.uint8) #red color
+    upper_range = np.array([10, 255, 255], dtype=np.uint8)
 
-  #####################
-  ## get robot position before move
-  ##################### Avanza derecho
-  initRobotPosition = m.Pose2D(motionProxy.getRobotPosition(False))
-  X = 1.0 # 100 cm al frente
-  Y = 0
-  Theta = 0
-  motionProxy.moveTo(X, Y, Theta, [ ["MaxStepX", 0.06],["MaxStepFrequency", 0.5] ]) # default of 0.02
-  sleep(0.5)
+    mask = cv2.inRange(hsv, lower_range, upper_range)
 
-  #Gira
-  X = 0 
-  Y = 0
-  Theta = (math.pi/2)-0.4
-  motionProxy.moveTo(X, Y, Theta,  [ ["MaxStepX", 0.04],["MaxStepFrequency", 0.5] ]) 
+    #Remove noise of the selected mask
+    kernel = np.ones((5,5),np.uint8)
+    erosion = cv2.erode(mask, kernel, iterations=1)
+    erosion2 = cv2.erode(erosion, kernel, iterations=1)
+    erosion3 = cv2.erode(erosion2, kernel, iterations=1)
+    dilation = cv2.dilate(erosion3,kernel, iterations =1)
+    dilation2 = cv2.dilate(dilation,kernel, iterations =1) 
+    dilation3 = cv2.dilate(dilation2,kernel, iterations =1)
 
-  #Avanza derecho
-  sleep(0.5)
-  X = 0.6 
-  Y = 0
-  Theta = 0
-  motionProxy.moveTo(X, Y, Theta, [ ["MaxStepX", 0.06],["MaxStepFrequency", 0.5] ]) # default of 0.02
+    #cv2.imshow('dilation3',dilation3)
+    cv2.imwrite('dilation3.png', dilation3)
 
-  sleep(1)
+    contRed= contoursFilter()
 
-  #Gira
-  X = 0 
-  Y = 0
-  Theta = -(math.pi)/2
-  motionProxy.moveTo(X, Y, Theta,  [ ["MaxStepX", 0.04],["MaxStepFrequency", 0.5] ]) 
+    global lenContRed
+    lenContRed= len(contRed)
 
-  #Avanza 30 cm al frente
-  sleep(0.5)
-  X = 0.5 # 50 cm al frente
-  Y = 0
-  Theta = 0
-  motionProxy.moveTo(X, Y, Theta, [ ["MaxStepX", 0.06],["MaxStepFrequency", 0.5] ]) # default of 0.02
+    #print("Length Contours: "+str(lenContRed))
 
-  ####
-  sleep(1)
-  # wait is useful because with post moveTo is not blocking function
-  motionProxy.waitUntilMoveIsFinished()
+    if(lenContRed >= 1):
+        return True
 
-  #####################
-  ## get robot position after move
-  #####################
-  endRobotPosition = m.Pose2D(motionProxy.getRobotPosition(False))
-
-  #####################
-  # compute and print the robot motion
-  #####################
-  robotMove = m.pose2DInverse(initRobotPosition)*endRobotPosition
-  # return an angle between ]-PI, PI]
-  robotMove.theta = m.modulo2PI(robotMove.theta)
-  print "Robot Move:", robotMove
-
-  postureProxy.goToPosture("StandInit", 0.5)
-
-  # Go to rest position
-  motionProxy.rest()
-
-# Walk ----------------------------
+    else:
+        return False
+# Vision --------------------------
 
 
 def mainRoutine():
@@ -123,14 +85,33 @@ def mainRoutine():
     asr.setLanguage('Spanish')
     tts.say(initialSentence)
     vocabulary = ['si', 'no', 'porfavor']
+    asr.setVocabulary(vocabulary, True)
     # wait for answer
-    #------Walking ------------#
-    
-    walkTurnAround()
-    sleep(2)
-  
-    print"Termina"
-# ---------- ------------------ ----------------- #
+    asr.subscribe('Test_ASR')
+    sleep(10)
+    data = tempMem.getData('WordRecognized')
+    asr.unsubscribe('Test_ASR')
+    # verify 
+    print 'WordRecognized {}'.format(data)
+    # ---------- ------------------ ----------------- #
+    # ---------- Vision Recognition ----------------- #
+    photoCP = ALProxy('ALPhotoCapture')
+    photoCP.setResolution(2)
+    photoCP.setPictureFormat('jpg')
+    photoCP.takePictures(5,'/home/nao/pythonProjects', 'nao')
+    img=cv2.imread('nao_4.jpg')  #take the last image (the good one)
+    #cv2.imshow('nao9',img)
+    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+
+    redColor = redFilter(hsv)
+
+    if redColor:
+        print lenContRed
+        tts.say("Es una carta roja")
+        print 'Red detected'
+    else:
+        print 'No color detected'
+    # ---------- ------------------ ----------------- #
 
 class ReactToTouch(ALModule):
     """ A simple module able to react
@@ -211,7 +192,3 @@ if __name__ == '__main__':
                         help='Robot port number')
     args = parser.parse_args()
     main(args.ip, args.port)
-
-
-if len(li) == 0:
-    print('the list is empty')

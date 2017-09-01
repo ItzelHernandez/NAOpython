@@ -22,13 +22,87 @@ import time
 ReactToTouch = None
 memory = None
 flag = False
+naoMarkRed= 64
+naoMarkWhite= 80
+naoMarkBrown= 108
+
 initialSentence = """ 
     Vamos
 """
 
+# ValidateNaoMark --------------
+
+def readNaoMark():
+
+  # Create a proxy to ALLandMarkDetection
+  try:
+    landMarkProxy = ALProxy("ALLandMarkDetection")
+  except Exception, e:
+    print "Error when creating landmark detection proxy:"
+    print str(e)
+    exit(1)
+
+  # Subscribe to the ALLandMarkDetection proxy
+  # This means that the module will write in ALMemory with
+  # the given period below
+  period = 500
+  landMarkProxy.subscribe("Test_LandMark", period, 0.0 )
+
+  # ALMemory variable where the ALLandMarkdetection modules
+  # outputs its results
+  memValue = "LandmarkDetected"
+
+  # Create a proxy to ALMemory
+  try:
+    memoryProxy = ALProxy("ALMemory")
+  except Exception, e:
+    print "Error when creating memory proxy:"
+    print str(e)
+    exit(1)
+    
+    global naoMarkDetected 
+    #naoMarkDetected= 64
+    #print "Nao Mark detected:"
+    #print naoMarkDetected
+
+
+  # A simple loop that reads the memValue and checks whether landmarks are detected.
+  for i in range(0, 10):
+    time.sleep(0.5)
+    val = memoryProxy.getData(memValue)
+
+    # Check whether we got a valid output.
+    if(val and isinstance(val, list) and len(val) >= 2):
+      # Second Field = array of Mark_Info's.
+      markInfoArray = val[1]
+
+      try:
+        # Browse the markInfoArray to get info on each detected mark.
+        for markInfo in markInfoArray:
+
+          # Second Field = Extra info (ie, mark ID).
+          markExtraInfo = markInfo[1]
+
+          naoMarkDetected= markExtraInfo[0]
+
+          return naoMarkDetected
+
+      except Exception, e:
+        print "Error msg %s" % (str(e))
+    else:
+        print "No landmark detected"
+
+
+  # Unsubscribe the module.
+  landMarkProxy.unsubscribe("Test_LandMark")
+
+  print "Test terminated successfully."
+
+# ValidateNaoMark --------------
+
 # Walk ----------------------------
 
-def walkTurnAround():
+def walkRoutine1():
 
   motionProxy  = ALProxy('ALMotion')
   postureProxy = ALProxy('ALRobotPosture')
@@ -50,43 +124,12 @@ def walkTurnAround():
 
   #####################
   ## get robot position before move
-  ##################### Avanza derecho
-  initRobotPosition = m.Pose2D(motionProxy.getRobotPosition(False))
-  X = 1.0 # 100 cm al frente
-  Y = 0
-  Theta = 0
-  motionProxy.moveTo(X, Y, Theta, [ ["MaxStepX", 0.06],["MaxStepFrequency", 0.5] ]) # default of 0.02
-  sleep(0.5)
-
-  #Gira
-  X = 0 
-  Y = 0
-  Theta = (math.pi/2)-0.4
-  motionProxy.moveTo(X, Y, Theta,  [ ["MaxStepX", 0.04],["MaxStepFrequency", 0.5] ]) 
-
-  #Avanza derecho
-  sleep(0.5)
-  X = 0.6 
-  Y = 0
-  Theta = 0
-  motionProxy.moveTo(X, Y, Theta, [ ["MaxStepX", 0.06],["MaxStepFrequency", 0.5] ]) # default of 0.02
-
-  sleep(1)
-
-  #Gira
-  X = 0 
-  Y = 0
-  Theta = -(math.pi)/2
-  motionProxy.moveTo(X, Y, Theta,  [ ["MaxStepX", 0.04],["MaxStepFrequency", 0.5] ]) 
-
-  #Avanza 30 cm al frente
-  sleep(0.5)
-  X = 0.5 # 50 cm al frente
-  Y = 0
-  Theta = 0
-  motionProxy.moveTo(X, Y, Theta, [ ["MaxStepX", 0.06],["MaxStepFrequency", 0.5] ]) # default of 0.02
-
-  ####
+  ##################### Avanza diagonal, primera validacion
+  initRobotPosition = m.Pose2D(motionProxy.getRobotPosition(False)) 
+  X = 0.60
+  Y = 0.80
+  Theta = 0#(math.pi)/2.0
+  motionProxy.moveTo(X, Y, Theta, [ ["MaxStepX", 0.045],["MaxStepFrequency", 0.2] ]) 
   sleep(1)
   # wait is useful because with post moveTo is not blocking function
   motionProxy.waitUntilMoveIsFinished()
@@ -102,12 +145,55 @@ def walkTurnAround():
   robotMove = m.pose2DInverse(initRobotPosition)*endRobotPosition
   # return an angle between ]-PI, PI]
   robotMove.theta = m.modulo2PI(robotMove.theta)
-  print "Robot Move:", robotMove
+  #print "Robot Move:", robotMove
+
+  postureProxy.goToPosture("StandInit", 0.5)
+
+
+def walkRoutine2():
+
+  motionProxy  = ALProxy('ALMotion')
+  postureProxy = ALProxy('ALRobotPosture')
+
+  postureProxy.goToPosture("StandInit", 0.5)
+  motionProxy.setMoveArmsEnabled(True, True)
+  motionProxy.setMotionConfig([["ENABLE_FOOT_CONTACT_PROTECTION", True]])
+
+  #####################
+  ## get robot position before move
+  ##################### Avanza diagonal, primera validacion
+  initRobotPosition = m.Pose2D(motionProxy.getRobotPosition(False)) 
+  X = 0.45
+  Y = -0.70
+  Theta = 0#(math.pi)/2.0
+  motionProxy.moveTo(X, Y, Theta, [ ["MaxStepX", 0.045],["MaxStepFrequency", 0.2] ]) 
+  sleep(1)
+  # wait is useful because with post moveTo is not blocking function
+  motionProxy.waitUntilMoveIsFinished()
+
+  #####################
+  ## get robot position after move
+  #####################
+  endRobotPosition = m.Pose2D(motionProxy.getRobotPosition(False))
+
+  #####################
+  # compute and print the robot motion
+  #####################
+  robotMove = m.pose2DInverse(initRobotPosition)*endRobotPosition
+  # return an angle between ]-PI, PI]
+  robotMove.theta = m.modulo2PI(robotMove.theta)
+  #print "Robot Move:", robotMove
 
   postureProxy.goToPosture("StandInit", 0.5)
 
   # Go to rest position
   motionProxy.rest()
+
+
+
+
+
+
 
 # Walk ----------------------------
 
@@ -126,10 +212,18 @@ def mainRoutine():
     # wait for answer
     #------Walking ------------#
     
-    walkTurnAround()
-    sleep(2)
+    walkRoutine2()
+    sleep(1)
+    value= readNaoMark()
+
+    print value
+    
+    if value == naoMarkRed:
+      print"voy a la canasta roja"
+
+    else:
+      print"no es igual"
   
-    print"Termina"
 # ---------- ------------------ ----------------- #
 
 class ReactToTouch(ALModule):

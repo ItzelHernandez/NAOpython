@@ -25,33 +25,11 @@ flag = False
 initialSentence = """ 
     Vamos
 """
-
+naoMarkDetected= 0
 # Walk ----------------------------
 
 def walkTurnAround():
 
-  motionProxy  = ALProxy('ALMotion')
-  postureProxy = ALProxy('ALRobotPosture')
-# Wake up robot
-  motionProxy.wakeUp()
-
-  # Send robot to Stand Init
-  postureProxy.goToPosture("StandInit", 0.5)
-
-  #####################
-  ## Enable arms control by move algorithm
-  #####################
-  motionProxy.setMoveArmsEnabled(True, True)
-  
-  #####################
-  ## FOOT CONTACT PROTECTION
-  #####################
-  motionProxy.setMotionConfig([["ENABLE_FOOT_CONTACT_PROTECTION", True]])
-
-  #####################
-  ## get robot position before move
-  ##################### Avanza derecho
-  initRobotPosition = m.Pose2D(motionProxy.getRobotPosition(False))
   X = 1.0 # 100 cm al frente
   Y = 0
   Theta = 0
@@ -211,7 +189,3 @@ if __name__ == '__main__':
                         help='Robot port number')
     args = parser.parse_args()
     main(args.ip, args.port)
-
-
-if len(li) == 0:
-    print('the list is empty')
