@@ -71,6 +71,79 @@ initialSentence = """
     Hola! 
 """
 
+# ValidateNaoMark --------------
+
+def readNaoMark():
+
+  # Create a proxy to ALLandMarkDetection
+  try:
+    landMarkProxy = ALProxy("ALLandMarkDetection")
+  except Exception, e:
+    print "Error when creating landmark detection proxy:"
+    print str(e)
+    exit(1)
+
+  # Subscribe to the ALLandMarkDetection proxy
+  # This means that the module will write in ALMemory with
+  # the given period below
+  period = 500
+  landMarkProxy.subscribe("Test_LandMark", period, 0.0 )
+
+  # ALMemory variable where the ALLandMarkdetection modules
+  # outputs its results
+  memValue = "LandmarkDetected"
+
+  # Create a proxy to ALMemory
+  try:
+    memoryProxy = ALProxy("ALMemory")
+  except Exception, e:
+    print "Error when creating memory proxy:"
+    print str(e)
+    exit(1)
+    
+    global naoMarkDetected 
+    #naoMarkDetected= 64
+    #print "Nao Mark detected:"
+    #print naoMarkDetected
+
+
+  # A simple loop that reads the memValue and checks whether landmarks are detected.
+  for i in range(0, 10):
+    time.sleep(0.5)
+    val = memoryProxy.getData(memValue)
+
+    # Check whether we got a valid output.
+    if(val and isinstance(val, list) and len(val) >= 2):
+      # Second Field = array of Mark_Info's.
+      markInfoArray = val[1]
+
+      try:
+        # Browse the markInfoArray to get info on each detected mark.
+        for markInfo in markInfoArray:
+
+          # Second Field = Extra info (ie, mark ID).
+          markExtraInfo = markInfo[1]
+
+          naoMarkDetected= markExtraInfo[0]
+
+          return naoMarkDetected
+
+      except Exception, e:
+        print "Error msg %s" % (str(e))
+    else:
+        print "No landmark detected"
+
+
+  # Unsubscribe the module.
+  landMarkProxy.unsubscribe("Test_LandMark")
+
+  print "Test terminated successfully."
+
+# ValidateNaoMark --------------
+
+
+
+
 
 ####---------------------####
 #       MAIN ROUTINE  #
@@ -78,8 +151,7 @@ initialSentence = """
 def mainRoutine():
     # Greetings
     tts = ALProxy('ALTextToSpeech')
-    # si jala pero debemos checar en un ambiente mas real al del concurso como
-    # se va a comportar el reconocimiento
+
     # ---------- Speech Recognition ----------------- #
     asr = ALProxy('ALSpeechRecognition')
     tempMem = ALProxy('ALMemory')
@@ -87,23 +159,33 @@ def mainRoutine():
     tts.say(initialSentence)
     vocabulary = ['si', 'no', 'porfavor']
     
-    
-    gVars = globalVariables(nao_ip)
-    gVars.posture.goToPosture("StandInit",0.5) 
+    #Define NaoMarks
+    naoMarkValue=0
+    naoMarkDetected=0
 
-    cont =0 
+    #Initialize global variables
+    gVars = globalVariables(nao_ip)
+
+    #Nao Initial posture
+    gVars.posture.goToPosture("StandInit",0.5) 
     initialAngle= gVars.memory.getData(gVars.ANGLEZ) #initialAngle
     
 
-    #esto sirve para checar la posic del robot
+    #Read NaoMarks
 
     gVars.motion.moveTo(0, 0, (math.pi/6) )
+    value= readNaoMark()
+    print value
     
     gVars.motion.moveTo(0, 0, -(math.pi/6) )
+    value= readNaoMark()
+    print value
     
     gVars.motion.moveTo(0, 0, -(math.pi/6) )
+    value= readNaoMark()
+    print value
     
-
+    '''
     while (True):
         
         actRelTheta = gVars.memory.getData(gVars.ANGLEZ)
@@ -115,7 +197,7 @@ def mainRoutine():
         print initialAngle
 
         sleep(1)
-
+'''
 
     print ("fin")
 
