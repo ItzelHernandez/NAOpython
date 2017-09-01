@@ -173,27 +173,27 @@ def mainRoutine():
 
     #Read NaoMarks
 
-    gVars.motion.moveTo(0, 0, -(math.pi/6))
-    value= readNaoMark()
+    value= readNaoMark() #aqui es cuando ve primero la 80 (cafe)
     print value
 
     if value == naoMarkValue:
       print"este es el camino"
-      gVars.motion.moveTo(1, 0, 0)
+      gVars.motion.moveTo(0.45, 0, 0)
 
     else:
-      gVars.motion.moveTo(0, 0, (math.pi/6))
+      gVars.motion.moveTo(0, 0, -(math.pi/6))#gira para valida la 108 (blanco)
       value= readNaoMark()
       print value
 
       if value == naoMarkValue:
         print"este es el camino"
+        gVars.motion.moveTo(0.95, 0, 0)
 
       else:
-        
+        gVars.motion.moveTo(0, 0, (math.pi/6))
         gVars.motion.moveTo(0, 0, (math.pi/6))
         print" voy en camino" # esta es cuando debe de ir a al naoMark 64
-        gVars.motion.moveTo(1, 0, 0)
+        gVars.motion.moveTo(0.95, 0, 0)
         #value= readNaoMark()
         #print value
 
