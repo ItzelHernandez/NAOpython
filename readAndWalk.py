@@ -49,14 +49,6 @@ class globalVariables:
             print "Could not create proxy to ALSonar"
             print "Error was: ", e
 
-
-    #position = [X,Y,ABSTHETA,RELTHETA]
-    X = 0
-    Y = 1
-    ABSTHETA = 2
-    RELTHETA = 3
-    V = 4
-
     #Paths
     LSONAR = "Device/SubDeviceList/US/Left/Sensor/Value"
     RSONAR = "Device/SubDeviceList/US/Right/Sensor/Value"
@@ -142,6 +134,93 @@ def readNaoMark():
 # ValidateNaoMark --------------
 
 
+# Vision --------------------------
+def contoursFilter():
+
+  ##-----Read Mask--------------------##
+  img = cv2.imread('dilation3.png',0)
+  ##-----Threshold Filter-------------##
+  ret,thresh = cv2.threshold(img,127,255,0)
+  ##-----Find contours-------------##
+  contours,hierarchy = cv2.findContours(thresh, 1, 2)
+
+  return contours
+
+def redFilter(hsv):
+    lower_range = np.array([0, 50, 50], dtype=np.uint8) #red color
+    upper_range = np.array([10, 255, 255], dtype=np.uint8)
+
+    mask = cv2.inRange(hsv, lower_range, upper_range)
+
+    #Remove noise of the selected mask
+    kernel = np.ones((5,5),np.uint8)
+    erosion = cv2.erode(mask, kernel, iterations=1)
+    erosion2 = cv2.erode(erosion, kernel, iterations=1)
+    erosion3 = cv2.erode(erosion2, kernel, iterations=1)
+    dilation = cv2.dilate(erosion3,kernel, iterations =1)
+    dilation2 = cv2.dilate(dilation,kernel, iterations =1) 
+    dilation3 = cv2.dilate(dilation2,kernel, iterations =1)
+
+    #cv2.imshow('dilation3',dilation3)
+    cv2.imwrite('dilation3.png', dilation3)
+
+    contRed= contoursFilter()
+    lenContRed= len(contRed)
+
+    return lenContRed
+
+
+def brownFilter(hsv):
+  lower_range = np.array([20, 50, 50], dtype=np.uint8) 
+  upper_range = np.array([40, 255, 255], dtype=np.uint8)
+
+  mask = cv2.inRange(hsv, lower_range, upper_range)
+
+  #Remove noise of the selected mask
+  kernel = np.ones((5,5),np.uint8)
+  erosion = cv2.erode(mask, kernel, iterations=1)
+  erosion2 = cv2.erode(erosion, kernel, iterations=1)
+  erosion3 = cv2.erode(erosion2, kernel, iterations=1)
+  dilation = cv2.dilate(erosion3,kernel, iterations =1)
+  dilation2 = cv2.dilate(dilation,kernel, iterations =1) 
+  dilation3 = cv2.dilate(dilation2,kernel, iterations =1)
+
+  dilation3Brown = dilation3
+  # cv2.imshow('dilation3Brown',dilation3Brown)
+  cv2.imwrite('dilation3.png', dilation3)
+
+  contBrown= contoursFilter()
+  
+  lenContBrown= len(contBrown)
+
+  return lenContBrown
+
+
+def whiteFilter(hsv):
+  lower_range = np.array([0, 0, 140], dtype=np.uint8) #red color
+  upper_range = np.array([0, 255, 255], dtype=np.uint8)
+
+  mask = cv2.inRange(hsv, lower_range, upper_range)
+
+  #Remove noise of the selected mask
+  kernel = np.ones((5,5),np.uint8)
+  erosion = cv2.erode(mask, kernel, iterations=1)
+  erosion2 = cv2.erode(erosion, kernel, iterations=1)
+  erosion3 = cv2.erode(erosion2, kernel, iterations=1)
+  dilation = cv2.dilate(erosion3,kernel, iterations =1)
+  dilation2 = cv2.dilate(dilation,kernel, iterations =1) 
+  dilation3 = cv2.dilate(dilation2,kernel, iterations =1)
+
+  dilation3White = dilation3
+  # cv2.imshow('dilation3White',dilation3White)
+  cv2.imwrite('dilation3.png', dilation3)
+  
+  contWhite= contoursFilter()
+
+  lenContWhite= len(contWhite)
+
+  return lenContWhite
+# Vision --------------------------
 
 
 
@@ -158,6 +237,58 @@ def mainRoutine():
     asr.setLanguage('Spanish')
     tts.say(initialSentence)
     vocabulary = ['si', 'no', 'porfavor']
+
+
+    # ---------- Vision Recognition ----------------- #
+    photoCP = ALProxy('ALPhotoCapture')
+    photoCP.setResolution(2)
+    photoCP.setPictureFormat('jpg')
+    photoCP.takePictures(5,'/home/nao/pythonProjects', 'nao')
+    img=cv2.imread('nao_4.jpg')  #take the last image (the good one)
+    #cv2.imshow('nao9',img)
+    #hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+
+    tts.say("Ahora empecemos")
+    sleep(1)
+    repeatRed=1
+
+    photoCP.takePictures(5,'/home/nao/pythonProjects', 'nao')
+    img=cv2.imread('nao_4.jpg') 
+    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    sleep(1)
+    
+    l0=redFilter(hsv)
+    l1=brownFilter(hsv)
+    l2=whiteFilter(hsv)  
+      
+    if l0 != 0 or l1 != 0 or l2 != 0:
+      l=[l0,l1,l2] #pone en la ultima posicion el color mas grande leido
+      l.sort()
+      print("l array:")
+      print(l);
+
+      colorDetected= l[2] #poner el nombre del color de la longitud mas larga
+
+      if colorDetected == l0: #color rojo
+        tts.say("Es una lata")
+        naoMarkValue= 64
+        print("Red detected")
+        
+      elif (colorDetected == l1): #color cafe
+        tts.say("Es carton")
+        naoMarkValue = 108
+        print("Brown detected")
+
+      elif (colorDetected == l2):#color blanco
+        tts.say("Es plastico")
+        naoMarkValue = 80
+        print("White detected")   
+
+      else:
+        print("No color detected")
+
+     # ---------- Vision Recognition ----------------- #
+
     
     #Define NaoMarks
     naoMarkValue=64
@@ -170,9 +301,15 @@ def mainRoutine():
     gVars.posture.goToPosture("StandInit",0.5) 
     initialAngle= gVars.memory.getData(gVars.ANGLEZ) #initialAngle
     
+    #Begins walk
+    #agregar lo del brazo
+    #gVars.motion.
+    gVars.motion.moveTo(0, 0, (math.pi)-0.4) #gira 180
+    gVars.motion.moveTo(0.4, 0, 0)
+    
+## Select Path -------------------------
 
     #Read NaoMarks
-
     value= readNaoMark() #aqui es cuando ve primero la 80 (cafe)
     print value
 
@@ -189,16 +326,15 @@ def mainRoutine():
         print"este es el camino"
         gVars.motion.moveTo(0.95, 0, 0)
 
-      else:
+      else: # esta es cuando debe de ir a al naoMark 64
         gVars.motion.moveTo(0, 0, (math.pi/6))
         gVars.motion.moveTo(0, 0, (math.pi/6))
-        print" voy en camino" # esta es cuando debe de ir a al naoMark 64
+        print" voy en camino" 
         gVars.motion.moveTo(0.95, 0, 0)
-        #value= readNaoMark()
-        #print value
+       
+## Select Path -------------------------
+      ''' 
 
-          
-    '''
     while (True):
         
         actRelTheta = gVars.memory.getData(gVars.ANGLEZ)
@@ -212,7 +348,6 @@ def mainRoutine():
         sleep(1)
 '''
 
-    print ("fin")
 
 ####---------------------####
 #       END MAIN ROUTINE  #
