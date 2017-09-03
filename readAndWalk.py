@@ -426,7 +426,6 @@ def mainRoutine():
     tts.say(initialSentence)
     vocabulary = ['si', 'no', 'porfavor']
 
-
     # ---------- Vision Recognition ----------------- #
     photoCP = ALProxy('ALPhotoCapture')
     photoCP.setResolution(2)
@@ -475,9 +474,7 @@ def mainRoutine():
       else:
         print("No color detected")
 
-     # ---------- Vision Recognition ----------------- #
-
-    
+    # ---------- Vision Recognition ----------------- #  
     #Define NaoMarks
     naoMarkValue=64
     naoMarkDetected=0
@@ -495,10 +492,39 @@ def mainRoutine():
     sleep(3)
     CloseHandBasket(gVars)
     
-    gVars.motion.moveTo(0.4, 0, 0)
+    # Check MoveFwd NaoMarks ----------
+    print" angulo inicial"
+    print initialAngle
 
-    finalHandMove(gVars)
+    gVars.motion.moveTo(0.5, 0, 0) #La distancia para que lea las NaoMarks
+
+    actRelTheta = gVars.memory.getData(gVars.ANGLEZ)
     
+    print" actual valor theta"
+    print actRelTheta
+
+    cTheta= actRelTheta-initialAngle
+    print cTheta
+
+    if (initialAngle > actRelTheta):
+      gVars.motion.moveTo(0, 0, (cTheta)) #gira 30
+      print" actual valor theta"
+      actRelTheta = gVars.memory.getData(gVars.ANGLEZ)
+      print actRelTheta
+      sleep(1)
+
+    elif (initialAngle < actRelTheta):
+      gVars.motion.moveTo(0, 0, (cTheta)) #gira 30
+      actRelTheta = gVars.memory.getData(gVars.ANGLEZ)
+      print" actual valor theta"
+      print actRelTheta
+      sleep(1)
+
+    else: 
+      print "va derecho"
+    
+    # Check MoveFwd NaoMarks ----------
+
 ## Select Path -------------------------
 
     #Read NaoMarks
@@ -508,6 +534,7 @@ def mainRoutine():
     if value == naoMarkValue:
       print"este es el camino"
       gVars.motion.moveTo(0.45, 0, 0)
+      finalHandMove(gVars)
 
     else:
       gVars.motion.moveTo(0, 0, -(math.pi/6))#gira para valida la 108 (blanco)
@@ -516,31 +543,16 @@ def mainRoutine():
 
       if value == naoMarkValue:
         print"este es el camino"
-        gVars.motion.moveTo(0.95, 0, 0)
+        gVars.motion.moveTo(0.85, 0, 0)
+        finalHandMove(gVars)
 
       else: # esta es cuando debe de ir a al naoMark 64
         gVars.motion.moveTo(0, 0, (math.pi/6))
         gVars.motion.moveTo(0, 0, (math.pi/6))
         print" voy en camino" 
-        gVars.motion.moveTo(0.95, 0, 0)
-       
-## Select Path -------------------------
-      ''' 
-
-    while (True):
-        
-        actRelTheta = gVars.memory.getData(gVars.ANGLEZ)
-        
-        print" actual valor theta"
-        print actRelTheta
-
-        print" initial "
-        print initialAngle
-
-        sleep(1)
-'''
-
-
+        gVars.motion.moveTo(0.85, 0, 0)
+        finalHandMove(gVars)
+      
 ####---------------------####
 #       END MAIN ROUTINE  #
 ####---------------------####
