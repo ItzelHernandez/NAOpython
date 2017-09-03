@@ -17,6 +17,7 @@ from math import exp,pow,fabs,cos,sin,sqrt
 
 nao_ip="0.0.0.0"
 
+
 # Global variable to store the ReactToTouch module instance
 ####--------------------- Global variables, all proxies and Nao resources
 class globalVariables:
@@ -62,6 +63,193 @@ flag = False
 initialSentence = """ 
     Hola! 
 """
+
+# NaoMotionBasket ------
+
+def OpenHandBasket(gVars):
+  names = list()
+  times = list()
+  keys = list()
+
+  names.append("LElbowRoll")
+  times.append([0.24])
+  keys.append([-1.1612])
+
+  names.append("LElbowYaw")
+  times.append([0.24])
+  keys.append([-1.66903])
+
+  names.append("LHand")
+  times.append([0.24])
+  keys.append([0.7524])
+
+  names.append("LShoulderPitch")
+  times.append([0.24])
+  keys.append([1.21335])
+
+  names.append("LShoulderRoll")
+  times.append([0.24])
+  keys.append([-0.069072])
+
+  names.append("LWristYaw")
+  times.append([0.24])
+  keys.append([-1.24718])
+
+  names.append("RElbowRoll")
+  times.append([0.24])
+  keys.append([1.00788])
+
+  names.append("RElbowYaw")
+  times.append([0.24])
+  keys.append([0.849794])
+
+  names.append("RHand")
+  times.append([0.24])
+  keys.append([0.0724])
+
+  names.append("RShoulderPitch")
+  times.append([0.24])
+  keys.append([1.69971])
+
+  names.append("RShoulderRoll")
+  times.append([0.24])
+  keys.append([-0.251618])
+
+  names.append("RWristYaw")
+  times.append([0.24])
+  keys.append([-0.105888])
+
+  try:
+    # uncomment the following line and modify the IP if you use this script outside Choregraphe.
+    # motion = ALProxy("ALMotion", IP, 9559)
+    gVars.motion.angleInterpolation(names, keys, times, True)
+  except BaseException, err:
+    print err
+
+def CloseHandBasket(gVars):
+  names = list()
+  times = list()
+  keys = list()
+
+  names.append("LElbowRoll")
+  times.append([0.72])
+  keys.append([-1.13205])
+
+  names.append("LElbowYaw")
+  times.append([0.72])
+  keys.append([-1.64602])
+
+  names.append("LHand")
+  times.append([0.72])
+  keys.append([0.2576])
+
+  names.append("LShoulderPitch")
+  times.append([0.72])
+  keys.append([1.26091])
+
+  names.append("LShoulderRoll")
+  times.append([0.72])
+  keys.append([-0.0567999])
+
+  names.append("LWristYaw")
+  times.append([0.72])
+  keys.append([-1.20116])
+
+  names.append("RElbowRoll")
+  times.append([0.72])
+  keys.append([0.997142])
+
+  names.append("RElbowYaw")
+  times.append([0.72])
+  keys.append([0.906552])
+
+  names.append("RHand")
+  times.append([0.72])
+  keys.append([0.0928])
+
+  names.append("RShoulderPitch")
+  times.append([0.72])
+  keys.append([1.58927])
+
+  names.append("RShoulderRoll")
+  times.append([0.72])
+  keys.append([-0.283832])
+
+  names.append("RWristYaw")
+  times.append([0.72])
+  keys.append([-0.0844119])
+
+  try:
+    gVars.motion.angleInterpolation(names, keys, times, True)
+
+  except BaseException, err:
+    print err
+
+
+def finalHandMove(gVars):
+
+  names = list()
+  times = list()
+  keys = list()
+
+  names.append("LElbowRoll")
+  times.append([0.2, 0.48])
+  keys.append([-0.644238, -0.889678])
+
+  names.append("LElbowYaw")
+  times.append([0.2, 0.48])
+  keys.append([-1.61074, -1.65369])
+
+  names.append("LHand")
+  times.append([0.2, 0.48])
+  keys.append([0.2088, 0.2088])
+
+  names.append("LShoulderPitch")
+  times.append([0.2, 0.48])
+  keys.append([0.765424, 0.937232])
+
+  names.append("LShoulderRoll")
+  times.append([0.2, 0.48])
+  keys.append([0.0383081, 0.101202])
+
+  names.append("LWristYaw")
+  times.append([0.2, 0.48])
+  keys.append([1.54623, -1.5862])
+
+  names.append("RElbowRoll")
+  times.append([0.2, 0.48])
+  keys.append([0.595234, 0.595234])
+
+  names.append("RElbowYaw")
+  times.append([0.2, 0.48])
+  keys.append([1.04001, 1.04001])
+
+  names.append("RHand")
+  times.append([0.2, 0.48])
+  keys.append([0.0608, 0.0608])
+
+  names.append("RShoulderPitch")
+  times.append([0.2, 0.48])
+  keys.append([1.48802, 1.48802])
+
+  names.append("RShoulderRoll")
+  times.append([0.2, 0.48])
+  keys.append([-0.257754, -0.257754])
+
+  names.append("RWristYaw")
+  times.append([0.2, 0.48])
+  keys.append([0.757754, 0.757754])
+
+  try:
+    # uncomment the following line and modify the IP if you use this script outside Choregraphe.
+    # motion = ALProxy("ALMotion", IP, 9559)
+    gVars.motion.angleInterpolation(names, keys, times, True)
+ 
+  except BaseException, err:
+    print err
+
+# NaoMotionBasket ------
+
 
 # ValidateNaoMark --------------
 
@@ -299,13 +487,17 @@ def mainRoutine():
 
     #Nao Initial posture
     gVars.posture.goToPosture("StandInit",0.5) 
-    initialAngle= gVars.memory.getData(gVars.ANGLEZ) #initialAngle
-    
-    #Begins walk
-    #agregar lo del brazo
-    #gVars.motion.
+
     gVars.motion.moveTo(0, 0, (math.pi)-0.4) #gira 180
+    initialAngle= gVars.memory.getData(gVars.ANGLEZ) #initialAngle
+
+    OpenHandBasket(gVars)
+    sleep(3)
+    CloseHandBasket(gVars)
+    
     gVars.motion.moveTo(0.4, 0, 0)
+
+    finalHandMove(gVars)
     
 ## Select Path -------------------------
 
