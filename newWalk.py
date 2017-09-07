@@ -57,20 +57,14 @@ class globalVariables:
     RSONAR = "Device/SubDeviceList/US/Right/Sensor/Value"
     ANGLEZ = "Device/SubDeviceList/InertialSensor/AngleZ/Sensor/Value" 
 
+    #Step 11
+    walkParameterFixedRotation = [ ["MaxStepX", 0.08],["MaxStepY", 0.14] ,["MaxStepTheta", 0.1963],["MaxStepFrequency", 0.5],["StepHeight", 0.04],["TorsoWx", 0.0],["TorsoWy", 0.0]]
+    
 
 ####---------------------
 
-
-def adjustmentTheta2(gVars, targetAngle):
-    #Get the actual value of theta
-    #actRelTheta = gVars.memory.getData(gVars.ANGLEZ)
-    difTheta = angleDifference(gVars,targetAngle)
-    print "Angle Without adjustment : " , gVars.memory.getData(gVars.ANGLEZ) , "Target Angle : " , targetAngle , "Difference Theta : " , difTheta
-    #Move the difference
-    gVars.motion.moveTo(0,0,difTheta,getWalkCalibration(difTheta))
-
 # FRONT, LEFT, RIGHT or BACK
-def angleDifference(gVars, targetAngle):
+def angleDifference(gVars, initialAngle):
     actRelTheta = gVars.memory.getData(gVars.ANGLEZ)
     AngleDif = actRelTheta-targetAngle
     ##print AngleDif
@@ -78,10 +72,11 @@ def angleDifference(gVars, targetAngle):
     # Check if correct 
     # n represents the sign of AngleDif
     if(AngleDif>0):
-        n = 1
+        n=1
+      
     else:
-        n = -1  
-
+        n=-1
+        
 
 #-------------------------------------------------------------------------------------------------------------#
 #                                           main()                                                            #
@@ -92,29 +87,51 @@ def main(robotIP):
     gVars = globalVariables(robotIP)
     gVars.posture.goToPosture("StandInit",0.5) 
 
-    cont =0 
     initialAngle= gVars.memory.getData(gVars.ANGLEZ) #initialAngle
-    
-    #Los tres giros que debe de hacer el nao para leer la NaoMark
-    gVars.motion.moveTo(0, 0, (math.pi/6) )
+    position = gVars.motion.getRobotPosition(False)
+    print "Robot Move:", position
 
-    gVars.motion.moveTo(0, 0, -(math.pi/6) )
-
-    gVars.motion.moveTo(0, 0, -(math.pi/6) )
-
-    while (True):
+    gVars.motion.moveTo(0.75, 0, 0) #gira 30
         
-        actRelTheta = gVars.memory.getData(gVars.ANGLEZ)
+    actRelTheta = gVars.memory.getData(gVars.ANGLEZ)
         
-        print" actual valor theta"
-        print actRelTheta
+    print" actual valor theta=" + str (actRelTheta)
 
-        print" initial "
-        print initialAngle
+    print" initial=  " + str(initialAngle)
 
-        sleep(1)
+    if (initialAngle >0):
 
-        #gVars.motion.moveTo(0.5, 0, 0 )
+        if (actRelTheta >0):
+            correctionAngle= ((actRelTheta)- initialAngle) #cuando ambos son positivos
+            print "correct=  " +  str(correctionAngle)
+            gVars.motion.moveTo(0, 0, (correctionAngle),gVars.walkParameterFixedRotation)
+            position =gVars.motion.getRobotPosition(False)
+            print "Robot Move:", position 
+
+        else:
+            correctionAngle= (actRelTheta*-1)- initialAngle
+            correctionAngle= correctionAngle*(-1)
+            print "correct=  " +  str(correctionAngle)
+            gVars.motion.moveTo(0, 0, (correctionAngle), gVars.walkParameterFixedRotation) 
+            position = gVars.motion.getRobotPosition(False)
+            print "Robot Move:", position
+
+    elif (initialAngle <0):
+
+        if (actRelTheta >0):
+            correctionAngle= actRelTheta - (initialAngle*-1)
+            correctionAngle= correctionAngle* (-1)
+            print "correct=  " +  str(correctionAngle)
+            gVars.motion.moveTo(0, 0, (correctionAngle),gVars.walkParameterFixedRotation)
+            position = gVars.motion.getRobotPosition(False)
+            print "Robot Move:", position
+
+        else: #ambos son negativos
+            correctionAngle= actRelTheta - (initialAngle)
+            print "correct=  " +  str(correctionAngle)
+            gVars.motion.moveTo(0, 0, (correctionAngle),gVars.walkParameterFixedRotation)
+            position = gVars.motion.getRobotPosition(False)
+            print "Robot Move:",position
 
         
 '''
