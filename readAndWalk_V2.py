@@ -338,19 +338,14 @@ def contoursFilter():
   return contours
 
 def redFilter(hsv):
-    lower_range = np.array([0, 50, 50], dtype=np.uint8) #red color
-    upper_range = np.array([10, 255, 255], dtype=np.uint8)
+    lower_range = np.array([0, 70, 70], dtype=np.uint8) #red color
+    upper_range = np.array([3, 255, 255], dtype=np.uint8)
 
     mask = cv2.inRange(hsv, lower_range, upper_range)
 
     #Remove noise of the selected mask
     kernel = np.ones((5,5),np.uint8)
-    erosion = cv2.erode(mask, kernel, iterations=1)
-    erosion2 = cv2.erode(erosion, kernel, iterations=1)
-    erosion3 = cv2.erode(erosion2, kernel, iterations=1)
-    dilation = cv2.dilate(erosion3,kernel, iterations =1)
-    dilation2 = cv2.dilate(dilation,kernel, iterations =1) 
-    dilation3 = cv2.dilate(dilation2,kernel, iterations =1)
+    dilation3 = cv2.dilate(mask,kernel, iterations =1)
 
     #cv2.imshow('dilation3',dilation3)
     cv2.imwrite('dilation3.png', dilation3)
@@ -368,13 +363,8 @@ def brownFilter(hsv):
   mask = cv2.inRange(hsv, lower_range, upper_range)
 
   #Remove noise of the selected mask
-  kernel = np.ones((5,5),np.uint8)
-  erosion = cv2.erode(mask, kernel, iterations=1)
-  erosion2 = cv2.erode(erosion, kernel, iterations=1)
-  erosion3 = cv2.erode(erosion2, kernel, iterations=1)
-  dilation = cv2.dilate(erosion3,kernel, iterations =1)
-  dilation2 = cv2.dilate(dilation,kernel, iterations =1) 
-  dilation3 = cv2.dilate(dilation2,kernel, iterations =1)
+  kernel = np.ones((10,10),np.uint8)
+  dilation3 = cv2.dilate(mask,kernel, iterations =1)
 
   dilation3Brown = dilation3
   # cv2.imshow('dilation3Brown',dilation3Brown)
@@ -388,19 +378,14 @@ def brownFilter(hsv):
 
 
 def whiteFilter(hsv):
-  lower_range = np.array([0, 0, 153], dtype=np.uint8) 
-  upper_range = np.array([203, 41, 255], dtype=np.uint8)
+  lower_range = np.array([0, 0, 140], dtype=np.uint8) 
+  upper_range = np.array([0, 255, 255], dtype=np.uint8)
 
   mask = cv2.inRange(hsv, lower_range, upper_range)
 
   #Remove noise of the selected mask
-  kernel = np.ones((5,5),np.uint8)
-  erosion = cv2.erode(mask, kernel, iterations=1)
-  erosion2 = cv2.erode(erosion, kernel, iterations=1)
-  erosion3 = cv2.erode(erosion2, kernel, iterations=1)
-  dilation = cv2.dilate(erosion3,kernel, iterations =1)
-  dilation2 = cv2.dilate(dilation,kernel, iterations =1) 
-  dilation3 = cv2.dilate(dilation2,kernel, iterations =1)
+  kernel = np.ones((10,10),np.uint8)
+  dilation3 = cv2.dilate(mask,kernel, iterations =1)
 
   dilation3White = dilation3
   # cv2.imshow('dilation3White',dilation3White)
@@ -412,7 +397,6 @@ def whiteFilter(hsv):
 
   return lenContWhite
 # Vision --------------------------
-
 
 
 ####---------------------####
@@ -501,7 +485,7 @@ def mainRoutine():
     #position = gVars.motion.getRobotPosition(False)
     #print "Robot Move:", position
 
-    gVars.motion.moveTo(0.70, 0, 0) #gira 30
+    gVars.motion.moveTo(0.80, 0, 0) #gira 30
         
     actRelTheta = gVars.memory.getData(gVars.ANGLEZ)
         
@@ -563,14 +547,14 @@ def mainRoutine():
 
       if value == naoMarkValue:
         print"este es el camino"
-        gVars.motion.moveTo(0.85, 0, 0)
+        gVars.motion.moveTo(0.80, 0, 0)
         finalHandMove(gVars)
 
       else: # esta es cuando debe de ir a al naoMark 64
         gVars.motion.moveTo(0, 0, (math.pi/6))
         gVars.motion.moveTo(0, 0, (math.pi/6))
         print" voy en camino" 
-        gVars.motion.moveTo(0.85, 0, 0)
+        gVars.motion.moveTo(0.80, 0, 0)
         finalHandMove(gVars)
       
 ####---------------------####
