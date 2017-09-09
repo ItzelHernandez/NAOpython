@@ -537,7 +537,7 @@ def mainRoutine():
 
     if value == naoMarkValue:
       print"este es el camino"
-      gVars.motion.moveTo(0.45, 0, 0)
+      gVars.motion.moveTo(0.50, 0, 0)
       finalHandMove(gVars)
 
     else:
@@ -547,14 +547,14 @@ def mainRoutine():
 
       if value == naoMarkValue:
         print"este es el camino"
-        gVars.motion.moveTo(0.80, 0, 0)
+        gVars.motion.moveTo(0.85, 0, 0)
         finalHandMove(gVars)
 
       else: # esta es cuando debe de ir a al naoMark 64
         gVars.motion.moveTo(0, 0, (math.pi/6))
         gVars.motion.moveTo(0, 0, (math.pi/6))
         print" voy en camino" 
-        gVars.motion.moveTo(0.80, 0, 0)
+        gVars.motion.moveTo(0.85, 0, 0)
         finalHandMove(gVars)
       
 ####---------------------####
